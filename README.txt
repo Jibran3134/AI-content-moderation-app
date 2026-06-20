@@ -59,7 +59,7 @@ All user capabilities + appeals queue, verdict overrides, policy config, analyti
 │                             Client (Browser)                             │
 │                            Next.js 14 — App Router                       │
 └────────────────────────────┬─────────────────────────────────────────────┘
-                                        │ HTTP / REST
+                             │ HTTP / REST
 ┌────────────────────────────▼─────────────────────────────────────────────┐
 │                      Express REST API                                    │
 │          Auth · Submissions · Appeals · Policies · Analytics             │
@@ -70,7 +70,7 @@ All user capabilities + appeals queue, verdict overrides, policy config, analyti
 │   │              │   │    analytics)  │   │     (AI moderation)        │ │
 │   └──────────────┘   └────────────────┘   └────────────────────────────┘ │
 └────────────────────────────┬────────────────────────────────┘
-                                        │ Mongoose ODM
+                             │ Mongoose ODM
 ┌────────────────────────────▼────────────────────────────────────────────┐
 │                         MongoDB 7                                       │
 │     Users · Submissions · Appeals · Policies · (Verdicts)               │
