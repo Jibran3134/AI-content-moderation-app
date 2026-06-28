@@ -12,7 +12,9 @@ import { globalErrorHandler, notFoundHandler } from './middleware/error';
 const app = express();
 
 // ─── Security ─────────────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(
   cors({
     origin: env.CLIENT_URL,
