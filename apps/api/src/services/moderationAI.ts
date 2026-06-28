@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
@@ -23,11 +23,11 @@ graphic_violence, hate_symbols, self_harm, extremist_propaganda, weapons_contrab
 Return ONLY valid JSON: { "results": [{ "category": string, "detected": boolean, "confidence": 0-100, "reasoning": string }] } \
 Return exactly 6 items — one per category, in the order listed above.`;
 
-let _client: OpenAI | null = null;
-function getClient(): OpenAI {
+let _client: Groq | null = null;
+function getClient(): Groq {
   if (!_client) {
-    if (!env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
-    _client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    if (!env.GROQ_API_KEY) throw new Error('GROQ_API_KEY is not configured');
+    _client = new Groq({ apiKey: env.GROQ_API_KEY });
   }
   return _client;
 }
@@ -46,7 +46,7 @@ export async function analyzeImage(
   try {
     const client = getClient();
     const response = await client.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {

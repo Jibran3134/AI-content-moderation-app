@@ -21,8 +21,9 @@ export default function UploadPage() {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const arr = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    const combined = [...previews, ...arr].slice(0, 10);
-    const fresh = combined.slice(previews.length);
+    const availableSlots = 10 - previews.length;
+    if (availableSlots <= 0) return;
+    const fresh = arr.slice(0, availableSlots);
 
     fresh.forEach((file) => {
       const reader = new FileReader();

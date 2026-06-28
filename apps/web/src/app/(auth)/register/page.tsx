@@ -6,9 +6,18 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { RegisterSchema, type RegisterInput } from '@repo/contracts';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
+
+const RegisterSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100).trim().optional(),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type RegisterInput = z.infer<typeof RegisterSchema>;
 
 function RegisterForm() {
   const router = useRouter();
@@ -27,11 +36,15 @@ function RegisterForm() {
       return res.data.data;
     },
     onSuccess: (data) => {
-      setAuth(data.user, data.tokens.accessToken, data.tokens.refreshToken);
+      // Backend returns { accessToken, user: { id, email, role } }
+      setAuth(data.user, data.accessToken);
+      toast.success('Account created successfully!');
       router.push('/dashboard');
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
-      setServerError(err.response?.data?.message ?? 'Registration failed. Please try again.');
+      const msg = err.response?.data?.message ?? 'Registration failed. Please try again.';
+      setServerError(msg);
+      toast.error(msg);
     },
   });
 
@@ -105,7 +118,7 @@ function RegisterForm() {
                 id="register-password"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Min 8 chars, upper, number, special"
+                placeholder="Min 8 characters"
                 {...register('password')}
                 className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               />

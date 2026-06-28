@@ -6,12 +6,18 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { LoginSchema, type LoginInput } from '@repo/contracts';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import type { Metadata } from 'next';
 
-// Note: metadata must come from a server component; this is the client form component
+const LoginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type LoginInput = z.infer<typeof LoginSchema>;
+
 function LoginForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -29,11 +35,15 @@ function LoginForm() {
       return res.data.data;
     },
     onSuccess: (data) => {
-      setAuth(data.user, data.tokens.accessToken, data.tokens.refreshToken);
+      // Backend returns { accessToken, user: { id, email, role } }
+      setAuth(data.user, data.accessToken);
+      toast.success('Welcome back!');
       router.push('/dashboard');
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
-      setServerError(err.response?.data?.message ?? 'Login failed. Please try again.');
+      const msg = err.response?.data?.message ?? 'Login failed. Please try again.';
+      setServerError(msg);
+      toast.error(msg);
     },
   });
 

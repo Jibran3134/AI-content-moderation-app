@@ -1,21 +1,33 @@
-version: '3.9'
 services:
   mongo:
     image: mongo:7
     ports: ["27017:27017"]
     volumes: [mongo_data:/data/db]
+
   api:
-    build: ./apps/api
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev --workspace=@repo/api"
+    volumes:
+      - .:/app
+      - /app/node_modules
     ports: ["4000:4000"]
     env_file: [.env]
     environment:
       MONGODB_URI: mongodb://mongo:27017/moderation_db
     depends_on: [mongo]
+
   web:
-    build: ./apps/web
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && cd apps/web && npx next dev -H 0.0.0.0 -p 3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
     ports: ["3000:3000"]
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
     depends_on: [api]
+
 volumes:
   mongo_data:

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload } from '../utils/jwt';
+import { verifyAccess, JwtPayload } from '../utils/jwt';
 
-// Extend Express Request
+// Extend Express Request to carry the authenticated user payload
 declare global {
   namespace Express {
     interface Request {
@@ -11,21 +11,46 @@ declare global {
 }
 
 /**
- * Auth disabled — attach a mock admin user so all routes work without tokens.
- * Replace this with real JWT verification when auth is re-enabled.
+ * Verify Bearer JWT from Authorization header.
+ * Attaches `req.user = { sub, role, type }` on success.
+ * Returns 401 if token is missing or invalid.
  */
-export function authenticate(req: Request, _res: Response, next: NextFunction): void {
-  req.user = {
-    sub: 'demo-user-id',
-    role: 'admin',
-    type: 'access',
-  };
-  next();
+export function authenticate(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, message: 'Authentication required' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = verifyAccess(token);
+    req.user = payload;
+    next();
+  } catch {
+    res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    return;
+  }
 }
 
-/** Role-based guard — disabled, pass-through. */
-export function authorize(..._roles: Array<'user' | 'admin'>) {
-  return (_req: Request, _res: Response, next: NextFunction): void => {
+/**
+ * Role-based authorization guard.
+ * Must be used after `authenticate`.
+ */
+export function authorize(...roles: Array<'user' | 'admin'>) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    if (roles.length > 0 && !roles.includes(req.user.role)) {
+      res.status(403).json({ success: false, message: 'Insufficient permissions' });
+      return;
+    }
+
     next();
   };
 }

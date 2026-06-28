@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
@@ -14,16 +14,16 @@ export interface AIAnalysis {
   reasoning: string;
 }
 
-let openaiClient: OpenAI | null = null;
+let groqClient: Groq | null = null;
 
-function getClient(): OpenAI {
-  if (!openaiClient) {
-    if (!env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
+function getClient(): Groq {
+  if (!groqClient) {
+    if (!env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not configured');
     }
-    openaiClient = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    groqClient = new Groq({ apiKey: env.GROQ_API_KEY });
   }
-  return openaiClient;
+  return groqClient;
 }
 
 const CATEGORIES = [
@@ -55,7 +55,7 @@ export class AIService {
 
     try {
       const response = await client.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'llama-3.2-11b-vision-preview',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           {
@@ -74,7 +74,7 @@ export class AIService {
       const raw = response.choices[0]?.message?.content ?? '{}';
       return JSON.parse(raw) as AIAnalysis;
     } catch (error) {
-      logger.error('OpenAI image analysis failed:', error);
+      logger.error('Groq image analysis failed:', error);
       return {
         decision: 'needs_review',
         confidence: 0,
